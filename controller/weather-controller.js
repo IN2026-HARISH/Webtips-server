@@ -1,6 +1,6 @@
-import { allTimeZones, timeForOneCity, nextNhoursWeather } from '../util/time-zone.js'
+const { allTimeZones, timeForOneCity, nextNhoursWeather } = require('../util/time-zone')
 
-export const getWeatherDetails = async (req, res) => {
+const getWeatherDetails = async (req, res) => {
   const rawData = allTimeZones()
 
   const formattedData = {}
@@ -47,8 +47,13 @@ export const getWeatherDetails = async (req, res) => {
   res.status(200).json(formattedData)
 }
 
-export const getCityTimeDetails = async (req, res) => {
+const getCityTimeDetails = async (req, res) => {
   const { city } = req.query
   const result = timeForOneCity(city)
   res.status(200).json(result)
+}
+
+module.exports = {
+  getWeatherDetails,
+  getCityTimeDetails
 }

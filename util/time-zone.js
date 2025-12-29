@@ -157,4 +157,4 @@ const allTimeZones = () => {
     WeatherIns.getWeather('Troll', 'Antarctica/Troll', -50, -72)
   ]
 }
-export { allTimeZones, timeForOneCity, nextNhoursWeather }
+module.exports = { allTimeZones, timeForOneCity, nextNhoursWeather }
