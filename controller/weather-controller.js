@@ -1,50 +1,12 @@
-const { allTimeZones, timeForOneCity, nextNhoursWeather } = require('../util/time-zone')
+const { timeForOneCity} = require('../util/time-zone');
+const { getWeatherData } = require('../util/get-weather');
+const { writeWeatherDetails } = require('../util/write-weather-data');
+const fs = require('fs');
+const path = require('path');
 
 const getWeatherDetails = async (req, res) => {
-  const rawData = allTimeZones()
-
-  const formattedData = {}
-
-  rawData.forEach(entry => {
-    const key = entry.cityName.toLowerCase()
-
-    const tempClean = entry.temperature
-      .replace(/<[^>]+>/g, '')
-      .replace(/&#176;/g, '')
-      .replace('C', '°C')
-      .trim()
-
-    const windSpeed = `${Math.floor(Math.random() * 96 + 5)}km/hr`
-
-    const cityTdn = `${entry.dateAndTime}, ${entry.cityName}`
-    const forecast = nextNhoursWeather(cityTdn, 5, rawData)
-    forecast.temperature.forEach((temp, index) => {
-      const cleanedTemp = temp
-        .replace(/<[^>]+>/g, '')
-        .replace(/&#176;/g, '')
-        .replace('C', '°C')
-        .trim()
-
-      forecast.temperature[index] = cleanedTemp
-    })
-
-    const nextFiveHrs = forecast.temperature.map(temp =>
-      temp.replace(/<[^>]+>/g, '').replace(/&#176;/g, '')
-    )
-
-    formattedData[key] = {
-      cityName: entry.cityName,
-      dateAndTime: entry.dateAndTime,
-      timeZone: entry.timeZone,
-      temperature: tempClean,
-      humidity: entry.humidity,
-      windSpeed,
-      precipitation: entry.precipitation,
-      nextFiveHrs
-    }
-  })
-
-  res.status(200).json(formattedData)
+  const data = getWeatherData()
+  res.status(200).json(data)
 }
 
 const getCityTimeDetails = async (req, res) => {
@@ -53,7 +15,17 @@ const getCityTimeDetails = async (req, res) => {
   res.status(200).json(result)
 }
 
+const sendDataFile = async (req, res) => {
+  writeWeatherDetails();
+  if(fs.existsSync(path.join(__dirname, '..', 'data', 'data.json'))){
+    res.sendFile(path.join(__dirname, '..', 'data', 'data.json'));
+  } else {
+    res.status(500).json({ error: 'Data file not found' });
+  }
+}
+
 module.exports = {
   getWeatherDetails,
-  getCityTimeDetails
+  getCityTimeDetails,
+  sendDataFile,
 }
