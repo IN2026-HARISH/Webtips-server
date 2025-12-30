@@ -1,22 +1,28 @@
 const fs = require('fs');
 const path = require('path');
-const { getWeatherData } = require('./get-weather');
-
+const { fork } = require('child_process');
 
 function writeWeatherDetails () {
-  const data = getWeatherData()
-  
-  const dataDir = path.join(__dirname, '..', 'data');
-  const filePath = path.join(dataDir, 'data.json');
+  return new Promise((resolve, reject) => {
+    const worker = fork(path.join(__dirname, '../child/weather-worker.js'));
 
-  if(!fs.existsSync(dataDir)){
-    fs.mkdirSync(dataDir);
-  }
+    worker.send('GET_WEATHER');
 
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    worker.on('message', (data) => {
+      const dataDir = path.join(__dirname, '..', 'data');
+      const filePath = path.join(dataDir, 'data.json');
 
-  console.log('Weather data written to data/data.json');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
 
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+      worker.kill();
+      resolve();
+    });
+
+    worker.on('error', reject);
+  });
 }
 
 module.exports = {

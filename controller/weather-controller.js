@@ -1,12 +1,23 @@
+const { fork } = require('child_process');
 const { timeForOneCity} = require('../util/time-zone');
-const { getWeatherData } = require('../util/get-weather');
 const { writeWeatherDetails } = require('../util/write-weather-data');
 const fs = require('fs');
 const path = require('path');
 
 const getWeatherDetails = async (req, res) => {
-  const data = getWeatherData()
-  res.status(200).json(data)
+  const worker = fork(path.join(__dirname, '..', 'child-process', 'weather-worker.js'));
+
+  worker.send('GET_WEATHER');
+
+  worker.on('message', (data) => {
+    res.status(200).json(data);
+    console.log(data)
+    worker.kill();
+  })
+
+  worker.on('error', () => {
+    res.status(500).json({ error: 'Error fetching weather data' });
+  })
 }
 
 const getCityTimeDetails = async (req, res) => {
